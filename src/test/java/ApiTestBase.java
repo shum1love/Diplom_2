@@ -8,7 +8,7 @@ public class ApiTestBase {
     @Before
     public void setUp() {
         // Установка базового URL для API
-        RestAssured.baseURI = "https://stellarburgers.nomoreparties.site/"; // замените на ваш URL
+        RestAssured.baseURI = "https://stellarburgers.nomoreparties.site";
         requestSpecification = RestAssured.given()
                 .header("Content-Type", "application/json");
     }
