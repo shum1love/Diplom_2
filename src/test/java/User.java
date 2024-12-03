@@ -9,6 +9,10 @@ public class User {
         this.password = password;
         this.name = name;
     }
+    public User(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
 
     // Геттеры и сеттеры
     public String getEmail() {
