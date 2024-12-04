@@ -3,11 +3,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Collection;
-import java.util.Random;
-
 import static io.restassured.RestAssured.*;
-import static org.hamcrest.Matchers.*;
 public class TestLoginUser {
     private String token;
     // Прописываем Before с главной ссылкой
@@ -47,7 +43,11 @@ public class TestLoginUser {
     }
     // Second test
     @Test
-    User user1 = new User(GenerateRandomString.randomEmail, randomPassword);
+    public void testLoginRandomUser(){
+    //
+    String randomEmail = GenerateRandomString.generateRandomEmail();
+    String randomPassword = GenerateRandomString.generateRandomPassword();
+    User user1 = new User(randomEmail, randomPassword);
     Response response1 = given()
             .header("Content-Type", "application/json")
             .body(user1)
@@ -55,7 +55,7 @@ public class TestLoginUser {
             .post("/api/auth/login");
     // Проверяем статус-код
         response1.then()
-                .statusCode(200);
+                .statusCode(401);
 }
     @After
     public void tearDown(){
