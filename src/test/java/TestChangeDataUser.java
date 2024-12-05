@@ -1,3 +1,4 @@
+// Изменение данных пользователя
 import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
@@ -53,6 +54,11 @@ public class TestChangeDataUser {
         // Проверяем статус-код
         response2.then()
                 .statusCode(200);
+        // Поллучим список товаров
+        OrderPojo orderPojo = given()
+                .header("Content-type", "application/json")
+                .get("/api/orders/all")
+                .body().as(OrderPojo.class);
     }
     // Second Test
     @Test
