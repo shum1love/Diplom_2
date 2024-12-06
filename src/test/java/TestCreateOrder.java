@@ -1,4 +1,5 @@
-// Создание пользователя
+import io.qameta.allure.Step;
+import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
@@ -12,216 +13,124 @@ import static org.hamcrest.CoreMatchers.equalTo;
 public class TestCreateOrder {
     private String token;
 
-    // Прописываем Before с главной ссылкой
     @Before
     public void setUp() {
         baseURI = "https://stellarburgers.nomoreparties.site";
     }
 
-    // First Test С авторизацией
+    @Step("Регистрация нового пользователя")
+    public Response registerUser(User user) {
+        return given()
+                .header("Content-Type", "application/json")
+                .body(user)
+                .when()
+                .post("/api/auth/register");
+    }
+
+    @Step("Авторизация пользователя")
+    public Response loginUser(User user) {
+        return given()
+                .header("Content-Type", "application/json")
+                .body(user)
+                .when()
+                .post("/api/auth/login");
+    }
+
+    @Step("Получение списка ингредиентов")
+    public List<String> getIngredients() {
+        Response response = given()
+                .header("Content-Type", "application/json")
+                .when()
+                .get("/api/ingredients");
+        response.then()
+                .statusCode(200)
+                .body("success", equalTo(true));
+        return response.jsonPath().getList("data._id");
+    }
+
+    @Step("Создание заказа")
+    public Response createOrder(String token, String ingredientsJson) {
+        return given()
+                .header("Authorization", token)
+                .header("Content-Type", "application/json")
+                .body(ingredientsJson)
+                .when()
+                .post("/api/orders");
+    }
+
     @Test
+    @DisplayName("Создание заказа с авторизацией")
     public void testCreateOrderWithLogin() {
-
-        // Данные пользователя
         User user = new User("examplr.praktikum@gmail.com", "praktikum", "praktikum");
-        User user1 = new User("examplr.praktikum@gmail.com", "praktikum");
+        User userLogin = new User("examplr.praktikum@gmail.com", "praktikum");
 
-        // Отправляем запрос на регистрацию
-        Response response = given()
-                .header("Content-Type", "application/json")
-                .body(user)
-                .when()
-                .post("/api/auth/register");
-        // Проверяем статус-код
-        response.then()
-                .statusCode(200); // Регистрация должна вернуть 200
+        registerUser(user).then().statusCode(200);
+        token = loginUser(userLogin).then().statusCode(200)
+                .extract().jsonPath().getString("accessToken");
 
-        // Сохраняем токен для удаления пользователя
-        token = response.jsonPath().getString("accessToken");
-        // Проверка ручки авторизации
-        Response response1 = given()
-                .header("Content-Type", "application/json")
-                .body(user1)
-                .when()
-                .post("/api/auth/login");
-        // Проверяем статус-код
-        response1.then()
-                .statusCode(200);
-        // Получение ингредиентов
-        Response ingredientsResponse = given()
-                .header("Content-Type", "application/json")
-                .when()
-                .get("/api/ingredients");
-        ingredientsResponse.then().statusCode(200).body("success", equalTo(true));
+        List<String> ingredients = getIngredients();
+        String ingredientsJson = "{\"ingredients\": [\"" + ingredients.get(0) + "\"]}";
 
-        List<String> ingredients = ingredientsResponse.jsonPath().getList("data._id");
-
-        //Create Order
-        Response response2 = given()
-                .header("Content-Type", "application/json")
-                .body("{\"ingredients\": [\"" + ingredients.get(0) + "\"]}")
-                .when()
-                .post("/api/orders");
-        // Проверяем статус-код
-        response2.then()
-                .statusCode(200);
+        createOrder(token, ingredientsJson).then().statusCode(200);
     }
-    // Second Test Без авторизацией с ингредиентами
+
     @Test
+    @DisplayName("Создание заказа без авторизации")
     public void testCreateOrderWithoutLogin() {
-        // Получение ингредиентов
-        Response ingredientsResponse = given()
-                .header("Content-Type", "application/json")
-                .when()
-                .get("/api/ingredients");
-        ingredientsResponse.then()
-                .statusCode(400)
-                .body("success", equalTo(false));
+        List<String> ingredients = getIngredients();
+        String ingredientsJson = "{\"ingredients\": [\"" + ingredients.get(0) + "\"]}";
 
-        List<String> ingredients = ingredientsResponse.jsonPath().getList("data._id");
-
-        //Create Order
-        Response response2 = given()
-                .header("Content-Type", "application/json")
-                .body("{\"ingredients\": [\"" + ingredients.get(0) + "\"]}")
-                .when()
-                .post("/api/orders");
-        // Проверяем статус-код
-        response2.then()
-                .statusCode(200);
+        createOrder(null, ingredientsJson).then().statusCode(401); // Нет авторизации
     }
 
-    // Third Test С авторизацией с ингредиентами
     @Test
+    @DisplayName("Создание заказа с авторизацией и с ингедиентами")
     public void testCreateOrderWithIngredients() {
-
-        // Данные пользователя
         User user = new User("examplr.praktikum@gmail.com", "praktikum", "praktikum");
-        User user1 = new User("examplr.praktikum@gmail.com", "praktikum");
+        User userLogin = new User("examplr.praktikum@gmail.com", "praktikum");
 
-        // Отправляем запрос на регистрацию
-        Response response = given()
-                .header("Content-Type", "application/json")
-                .body(user)
-                .when()
-                .post("/api/auth/register");
-        // Проверяем статус-код
-        response.then()
-                .statusCode(200); // Регистрация должна вернуть 200
+        registerUser(user).then().statusCode(200);
+        token = loginUser(userLogin).then().statusCode(200)
+                .extract().jsonPath().getString("accessToken");
 
-        // Сохраняем токен для удаления пользователя
-        token = response.jsonPath().getString("accessToken");
-        // Проверка ручки авторизации
-        Response response1 = given()
-                .header("Content-Type", "application/json")
-                .body(user1)
-                .when()
-                .post("/api/auth/login");
-        // Проверяем статус-код
-        response1.then()
-                .statusCode(200);
-        // Получение ингредиентов
-        Response ingredientsResponse = given()
-                .header("Content-Type", "application/json")
-                .when()
-                .get("/api/ingredients");
-        ingredientsResponse.then().statusCode(200).body("success", equalTo(true));
+        List<String> ingredients = getIngredients();
+        String ingredientsJson = "{\"ingredients\": [\"" + ingredients.get(1) + "\"]}";
 
-        List<String> ingredients = ingredientsResponse.jsonPath().getList("data._id");
-
-        //Create Order
-        Response response2 = given()
-                .header("Content-Type", "application/json")
-                .body("{\"ingredients\": [\"" + ingredients.get(2) + "\"]}")
-                .when()
-                .post("/api/orders");
-        // Проверяем статус-код
-        response2.then()
-                .statusCode(200);
+        createOrder(token, ingredientsJson).then().statusCode(200);
     }
-    // Fourth Test С авторизацией без ингредиентов
+
     @Test
-    public void testCreateOrderWithotIngredients() {
-
-        // Данные пользователя
+    @DisplayName("Создание заказа с авторизацией, но без ингредиентов")
+    public void testCreateOrderWithoutIngredients() {
         User user = new User("examplr.praktikum@gmail.com", "praktikum", "praktikum");
-        User user1 = new User("examplr.praktikum@gmail.com", "praktikum");
+        User userLogin = new User("examplr.praktikum@gmail.com", "praktikum");
 
-        // Отправляем запрос на регистрацию
-        Response response = given()
-                .header("Content-Type", "application/json")
-                .body(user)
-                .when()
-                .post("/api/auth/register");
-        // Проверяем статус-код
-        response.then()
-                .statusCode(200); // Регистрация должна вернуть 200
+        registerUser(user).then().statusCode(200);
+        token = loginUser(userLogin).then().statusCode(200)
+                .extract().jsonPath().getString("accessToken");
 
-        // Сохраняем токен для удаления пользователя
-        token = response.jsonPath().getString("accessToken");
-        // Проверка ручки авторизации
-        Response response1 = given()
-                .header("Content-Type", "application/json")
-                .body(user1)
-                .when()
-                .post("/api/auth/login");
-        // Проверяем статус-код
-        response1.then()
-                .statusCode(200);
-        //Create Order
-        Response response2 = given()
-                .header("Content-Type", "application/json")
-                .when()
-                .post("/api/orders");
-        // Проверяем статус-код
-        response2.then()
+        createOrder(token, "{\"ingredients\": []}").then()
                 .statusCode(400)
                 .body("success", equalTo(false));
     }
-    // Fifth Test С авторизацией c неверным хешем
+
     @Test
+    @DisplayName("Создание заказа с авторизацией, но с неправильным хешем ингедиентов")
     public void testCreateOrderWithWrongHash() {
-
-        // Данные пользователя
         User user = new User("examplr.praktikum@gmail.com", "praktikum", "praktikum");
-        User user1 = new User("examplr.praktikum@gmail.com", "praktikum");
+        User userLogin = new User("examplr.praktikum@gmail.com", "praktikum");
 
-        // Отправляем запрос на регистрацию
-        Response response = given()
-                .header("Content-Type", "application/json")
-                .body(user)
-                .when()
-                .post("/api/auth/register");
-        // Проверяем статус-код
-        response.then()
-                .statusCode(200); // Регистрация должна вернуть 200
+        registerUser(user).then().statusCode(200);
+        token = loginUser(userLogin).then().statusCode(200)
+                .extract().jsonPath().getString("accessToken");
 
-        // Сохраняем токен для удаления пользователя
-        token = response.jsonPath().getString("accessToken");
-        // Проверка ручки авторизации
-        Response response1 = given()
-                .header("Content-Type", "application/json")
-                .body(user1)
-                .when()
-                .post("/api/auth/login");
-        // Проверяем статус-код
-        response1.then()
-                .statusCode(200);
-
-        //Create Order
-        Response response2 = given()
-                .header("Content-Type", "application/json")
-                .body("{\"ingredients\": [\"123456789example12345678\"]}")
-                .when()
-                .post("/api/orders");
-        // Проверяем статус-код
-        response2.then()
+        createOrder(token, "{\"ingredients\": [\"wrong_hash\"]}").then()
                 .statusCode(500);
     }
+
     @After
-    public void tearDown(){
+    public void tearDown() {
         if (token != null) {
-            // Удаляем пользователя после теста
             given()
                     .header("Authorization", token)
                     .when()

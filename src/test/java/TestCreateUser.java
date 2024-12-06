@@ -1,4 +1,5 @@
 import io.qameta.allure.Step;
+import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
@@ -18,6 +19,7 @@ public class TestCreateUser {
     }
 
     @Test
+    @DisplayName("Создание уникального пользователя")
     public void testRegisterUserSuccessfully() {
         User user = new User("examplr.praktikum@gmail.com", "praktikum", "praktikum");
 
@@ -29,6 +31,7 @@ public class TestCreateUser {
     }
 
     @Test
+    @DisplayName("Создание пользователя, который уже зарегистрирован")
     public void testRegisterUserRepeat() {
         User user = new User("examplerrr.praktikum@gmail.com", "praktikum", "praktikum");
 
@@ -42,6 +45,7 @@ public class TestCreateUser {
     }
 
     @Test
+    @DisplayName("Создание пользователя: одно из обязательных полей не заполнено")
     public void testRegisterUserWithoutParameter() {
         Collection<Object[]> testData = UserData.getTestData();
 

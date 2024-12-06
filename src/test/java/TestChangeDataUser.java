@@ -1,106 +1,103 @@
-// Изменение данных пользователя
+import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import static io.restassured.RestAssured.*;
+
 public class TestChangeDataUser {
     private String token;
-    // Прописываем Before с главной ссылкой
+
     @Before
     public void setUp() {
         baseURI = "https://stellarburgers.nomoreparties.site";
     }
-    // First Test
-    @Test
-    public void testChangeDataUser() {
 
-        // Данные пользователя
-        User user = new User("examplr.praktikum@gmail.com", "praktikum", "praktikum");
-        User user1 = new User("examplr.praktikum@gmail.com", "praktikum");
-        // Change Data
-        UserEmailName updateData = new UserEmailName();
-        updateData.setEmail("boris.borisovich@exaple.com");
-        updateData.setName("Boris");
-
-        // Отправляем запрос на регистрацию
-        Response response = given()
+    @Step("Регистрация нового пользователя")
+    public Response registerUser(User user) {
+        return given()
                 .header("Content-Type", "application/json")
                 .body(user)
                 .when()
                 .post("/api/auth/register");
-        // Проверяем статус-код
-        response.then()
-                .statusCode(200); // Регистрация должна вернуть 200
+    }
 
-        // Сохраняем токен для удаления пользователя
-        token = response.jsonPath().getString("accessToken");
-        // Проверка ручки авторизации
-        Response response1 = given()
+    @Step("Авторизация пользователя")
+    public Response loginUser(User user) {
+        return given()
                 .header("Content-Type", "application/json")
-                .body(user1)
+                .body(user)
                 .when()
                 .post("/api/auth/login");
-        // Проверяем статус-код
-        response1.then()
-                .statusCode(200);
-        // Проверка ручки Изменения данных
-        Response response2 = given()
+    }
+
+    @Step("Изменение данных пользователя")
+    public Response updateUser(String token, UserEmailName updateData) {
+        return given()
                 .header("Authorization", token)
+                .header("Content-Type", "application/json")
                 .body(updateData)
                 .when()
                 .patch("/api/auth/user");
-        // Проверяем статус-код
-        response2.then()
-                .statusCode(200);
-        // Поллучим список товаров
-        OrderPojo orderPojo = given()
-                .header("Content-type", "application/json")
-                .get("/api/orders/all")
-                .body().as(OrderPojo.class);
     }
-    // Second Test
+
+    @Step("Получение всех заказов")
+    public OrderPojo getAllOrders() {
+        return given()
+                .header("Content-Type", "application/json")
+                .get("/api/orders/all")
+                .body()
+                .as(OrderPojo.class);
+    }
+
+    @Step("Удаление пользователя")
+    public void deleteUser(String token) {
+        given()
+                .header("Authorization", token)
+                .when()
+                .delete("/api/auth/user")
+                .then()
+                .statusCode(202);
+    }
+
+    @Test
+    public void testChangeDataUser() {
+        User user = new User("examplr.praktikum@gmail.com", "praktikum", "praktikum");
+        User userForLogin = new User("examplr.praktikum@gmail.com", "praktikum");
+        UserEmailName updateData = new UserEmailName("boris.borisovich@exaple.com", "Boris");
+
+        Response registerResponse = registerUser(user);
+        registerResponse.then().statusCode(200);
+        token = registerResponse.jsonPath().getString("accessToken");
+
+        Response loginResponse = loginUser(userForLogin);
+        loginResponse.then().statusCode(200);
+
+        Response updateResponse = updateUser(token, updateData);
+        updateResponse.then().statusCode(200);
+
+        OrderPojo orders = getAllOrders();
+        // Добавьте проверки по заказам, если это требуется
+    }
+
     @Test
     public void testChangeDataWithoutLogin() {
-        // Данные пользователя
         User user = new User("examplr.praktikum@gmail.com", "praktikum", "praktikum");
-        // Change Data
-        UserEmailName updateData = new UserEmailName();
-        updateData.setEmail("boris.borisovich@exaple.com");
-        updateData.setName("Boris");
-        // Отправляем запрос на регистрацию
-        Response response = given()
-                .header("Content-Type", "application/json")
-                .body(user)
-                .when()
-                .post("/api/auth/register");
-        // Проверяем статус-код
-        response.then()
-                .statusCode(200); // Регистрация должна вернуть 200
+        UserEmailName updateData = new UserEmailName("boris.borisovich@exaple.com", "Boris");
 
-        // Сохраняем токен для удаления пользователя
-        token = response.jsonPath().getString("accessToken");
-        // Проверка ручки Изменения данных
-        Response response2 = given()
-                .header("Content-Type", "application/json")
-                .body(updateData)
-                .when()
-                .patch("/api/auth/user");
-        // Проверяем статус-код
-        response2.then()
-                .statusCode(401);
+        Response registerResponse = registerUser(user);
+        registerResponse.then().statusCode(200);
+        token = registerResponse.jsonPath().getString("accessToken");
+
+        Response updateResponse = updateUser(null, updateData);
+        updateResponse.then().statusCode(401);
     }
+
     @After
-    public void tearDown(){
+    public void tearDown() {
         if (token != null) {
-            // Удаляем пользователя после теста
-            given()
-                    .header("Authorization", token)
-                    .when()
-                    .delete("/api/auth/user")
-                    .then()
-                    .statusCode(202);
+            deleteUser(token);
         }
     }
 }
