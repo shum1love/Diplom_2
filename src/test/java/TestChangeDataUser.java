@@ -1,4 +1,5 @@
 import io.qameta.allure.Step;
+import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
@@ -62,6 +63,7 @@ public class TestChangeDataUser {
     }
 
     @Test
+    @DisplayName("Изменение данных пользователя с авторизацией")
     public void testChangeDataUser() {
         User user = new User("examplr.praktikum@gmail.com", "praktikum", "praktikum");
         User userForLogin = new User("examplr.praktikum@gmail.com", "praktikum");
@@ -78,10 +80,10 @@ public class TestChangeDataUser {
         updateResponse.then().statusCode(200);
 
         OrderPojo orders = getAllOrders();
-        // Добавьте проверки по заказам, если это требуется
     }
 
     @Test
+    @DisplayName("Изменение данных пользователя без авторизации")
     public void testChangeDataWithoutLogin() {
         User user = new User("examplr.praktikum@gmail.com", "praktikum", "praktikum");
         UserEmailName updateData = new UserEmailName("boris.borisovich@exaple.com", "Boris");

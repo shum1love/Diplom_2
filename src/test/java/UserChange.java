@@ -22,7 +22,14 @@ public class UserChange {
 class UserEmailName {
     private String email;
     private String name;
-    // Getter and Setter
+
+    // Конструктор с параметрами
+    public UserEmailName(String email, String name) {
+        this.email = email;
+        this.name = name;
+    }
+
+    // Геттеры и сеттеры
     public String getEmail() {
         return email;
     }
