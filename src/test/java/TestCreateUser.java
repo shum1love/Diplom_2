@@ -1,3 +1,4 @@
+import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
@@ -9,65 +10,37 @@ import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
 
 public class TestCreateUser {
-    // Переменные класса
     private String token;
 
-    // Прописываем Before с главной ссылкой
     @Before
     public void setUp() {
         baseURI = "https://stellarburgers.nomoreparties.site";
     }
 
-    // First Test
     @Test
     public void testRegisterUserSuccessfully() {
-
-        // Данные пользователя
         User user = new User("examplr.praktikum@gmail.com", "praktikum", "praktikum");
 
-        // Отправляем запрос на регистрацию
-        Response response = given()
-                .header("Content-Type", "application/json")
-                .body(user)
-                .when()
-                .post("/api/auth/register");
+        Response response = registerUser(user);
 
-        // Проверяем статус-код и тело ответа
-        response.then()
-                .statusCode(200) // Регистрация должна вернуть 200
-                .body("success", equalTo(true));
+        validateSuccessfulRegistration(response);
 
-        // Сохраняем токен для удаления пользователя
-        token = response.jsonPath().getString("accessToken");
+        saveToken(response);
     }
 
-    // Second Test
     @Test
     public void testRegisterUserRepeat() {
-        // Данные пользователя
         User user = new User("examplerrr.praktikum@gmail.com", "praktikum", "praktikum");
-        // Отправляем запрос на регистрацию
-        Response response = given()
-                .header("Content-Type", "application/json")
-                .body(user)
-                .when()
-                .post("/api/auth/register");
-        // Проверяем статус-код
-        response.then().statusCode(200);
 
-        // Отправляем ручку второй раз с теми же тестовыми данными
-        Response response1 = given()
-                .header("Content-Type", "application/json")
-                .body(user)
-                .when()
-                .post("/api/auth/register");
-        // Проверяем статус-код
-        response1.then().statusCode(403);
-        // Сохраняем токен для удаления пользователя
-        token = response.jsonPath().getString("accessToken");
+        Response firstResponse = registerUser(user);
+        validateSuccessfulRegistration(firstResponse);
+
+        Response secondResponse = registerUser(user);
+        validateDuplicateRegistration(secondResponse);
+
+        saveToken(firstResponse);
     }
 
-    //Third Test
     @Test
     public void testRegisterUserWithoutParameter() {
         Collection<Object[]> testData = UserData.getTestData();
@@ -79,26 +52,60 @@ public class TestCreateUser {
 
             User user = new User(email, password, name);
 
-            Response response = given()
-                    .header("Content-Type", "application/json")
-                    .body(user)
-                    //.log().all() // Строка для снятия логов теста и просмотра как прошёл каждый тестовый набор
-                    .when()
-                    .post("/api/auth/register");
-            response.then()
-                    .statusCode(403);
+            Response response = registerUser(user);
+            validateMissingParameterResponse(response);
         }
     }
+
     @After
-    public void tearDown(){
+    public void tearDown() {
         if (token != null) {
-            // Удаляем пользователя после теста
-            given()
-                    .header("Authorization", token)
-                    .when()
-                    .delete("/api/auth/user")
-                    .then()
-                    .statusCode(202);
+            deleteUser(token);
         }
+    }
+
+    @Step("Регистрация пользователя")
+    private Response registerUser(User user) {
+        return given()
+                .header("Content-Type", "application/json")
+                .body(user)
+                .when()
+                .post("/api/auth/register");
+    }
+
+    @Step("Проверка успешной регистрации")
+    private void validateSuccessfulRegistration(Response response) {
+        response.then()
+                .statusCode(200)
+                .body("success", equalTo(true));
+    }
+
+    @Step("Проверка регистрации с повторными данными")
+    private void validateDuplicateRegistration(Response response) {
+        response.then()
+                .statusCode(403)
+                .body("message", equalTo("User already exists"));
+    }
+
+    @Step("Проверка ответа при отсутствии параметров")
+    private void validateMissingParameterResponse(Response response) {
+        response.then()
+                .statusCode(403)
+                .body("message", equalTo("Email, password and name are required fields"));
+    }
+
+    @Step("Сохранение токена")
+    private void saveToken(Response response) {
+        token = response.jsonPath().getString("accessToken");
+    }
+
+    @Step("Удаление пользователя")
+    private void deleteUser(String token) {
+        given()
+                .header("Authorization", token)
+                .when()
+                .delete("/api/auth/user")
+                .then()
+                .statusCode(202);
     }
 }
