@@ -4,11 +4,10 @@ import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import java.util.Collection;
-
-import static io.restassured.RestAssured.*;
-import static org.hamcrest.Matchers.*;
+import static io.restassured.RestAssured.baseURI;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.CoreMatchers.equalTo;
 
 public class TestCreateUser {
     private String token;
@@ -37,10 +36,8 @@ public class TestCreateUser {
 
         Response firstResponse = registerUser(user);
         validateSuccessfulRegistration(firstResponse);
-
         Response secondResponse = registerUser(user);
         validateDuplicateRegistration(secondResponse);
-
         saveToken(firstResponse);
     }
 
