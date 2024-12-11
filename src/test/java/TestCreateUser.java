@@ -1,3 +1,5 @@
+import SupportClasses.User;
+import SupportClasses.UserData;
 import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
@@ -8,6 +10,7 @@ import java.util.Collection;
 import static io.restassured.RestAssured.baseURI;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.equalTo;
+import org.apache.hc.core5.http.HttpStatus;
 
 public class TestCreateUser {
     private String token;
@@ -20,7 +23,7 @@ public class TestCreateUser {
     @Test
     @DisplayName("Создание уникального пользователя")
     public void testRegisterUserSuccessfully() {
-        User user = new User("examplr.praktikum@gmail.com", "praktikum", "praktikum");
+        User user = new User("bogdan.praktikum@gmail.com", "Boris777", "Boris");
 
         Response response = registerUser(user);
 
@@ -32,7 +35,7 @@ public class TestCreateUser {
     @Test
     @DisplayName("Создание пользователя, который уже зарегистрирован")
     public void testRegisterUserRepeat() {
-        User user = new User("examplerrr.praktikum@gmail.com", "praktikum", "praktikum");
+        User user = new User("bogdann1.praktikum@gmail.com", "Boris777", "Boris");
 
         Response firstResponse = registerUser(user);
         validateSuccessfulRegistration(firstResponse);
@@ -77,21 +80,21 @@ public class TestCreateUser {
     @Step("Проверка успешной регистрации")
     private void validateSuccessfulRegistration(Response response) {
         response.then()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .body("success", equalTo(true));
     }
 
     @Step("Проверка регистрации с повторными данными")
     private void validateDuplicateRegistration(Response response) {
         response.then()
-                .statusCode(403)
-                .body("message", equalTo("User already exists"));
+                .statusCode(HttpStatus.SC_FORBIDDEN)
+                .body("message", equalTo("SupportClasses.User already exists"));
     }
 
     @Step("Проверка ответа при отсутствии параметров")
     private void validateMissingParameterResponse(Response response) {
         response.then()
-                .statusCode(403)
+                .statusCode(HttpStatus.SC_FORBIDDEN)
                 .body("message", equalTo("Email, password and name are required fields"));
     }
 
@@ -101,12 +104,12 @@ public class TestCreateUser {
     }
 
     @Step("Удаление пользователя")
-    private void deleteUser(String token) {
+    public void deleteUser(String token) {
         given()
                 .header("Authorization", token)
                 .when()
                 .delete("/api/auth/user")
                 .then()
-                .statusCode(202);
+                .statusCode(HttpStatus.SC_ACCEPTED);
     }
 }

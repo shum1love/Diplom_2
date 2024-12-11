@@ -1,3 +1,5 @@
+import SupportClasses.GenerateRandomString;
+import SupportClasses.User;
 import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
@@ -6,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.baseURI;
+import org.apache.hc.core5.http.HttpStatus;
 
 public class TestLoginUser {
     private String token;
@@ -43,16 +46,16 @@ public class TestLoginUser {
     @Test
     @DisplayName("Авторизация под существующим пользователем")
     public void testLoginExistingUser() {
-        User user = new User("examplr.praktikum@gmail.com", "praktikum", "praktikum");
-        User userForLogin = new User("examplr.praktikum@gmail.com", "praktikum");
+        User user = new User("bogdanexample.praktikum@gmail.com", "Bogdan777", "Bogdan");
+        User userForLogin = new User("examplr.praktikum@gmail.com", "Bogdan777");
 
         Response registerResponse = registerUser(user);
-        registerResponse.then().statusCode(200);
+        registerResponse.then().statusCode(HttpStatus.SC_OK);
 
         token = registerResponse.jsonPath().getString("accessToken");
 
         Response loginResponse = loginUser(userForLogin);
-        loginResponse.then().statusCode(200);
+        loginResponse.then().statusCode(HttpStatus.SC_OK);
     }
 
     @Test
@@ -61,13 +64,13 @@ public class TestLoginUser {
         User randomUser = generateRandomUser();
 
         Response loginResponse = loginUser(randomUser);
-        loginResponse.then().statusCode(401);
+        loginResponse.then().statusCode(HttpStatus.SC_UNAUTHORIZED);
     }
 
     @After
     public void tearDown() {
         if (token != null) {
-            deleteUser(token).then().statusCode(202);
+            deleteUser(token).then().statusCode(HttpStatus.SC_ACCEPTED);
         }
     }
 

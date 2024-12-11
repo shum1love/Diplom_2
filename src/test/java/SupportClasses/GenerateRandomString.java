@@ -1,3 +1,5 @@
+package SupportClasses;
+
 import java.util.Random;
 
 public class GenerateRandomString {

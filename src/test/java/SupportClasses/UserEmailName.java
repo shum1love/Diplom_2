@@ -1,4 +1,6 @@
-class UserEmailName {
+package SupportClasses;
+
+public class UserEmailName {
     private String email;
     private String name;
 
