@@ -25,7 +25,7 @@ public class TestCreateUser {
 
         apiSteps.validateSuccessfulRegistration(response);
 
-        saveToken(response);
+        token = apiSteps.saveToken(response);
     }
 
     @Test
@@ -38,7 +38,7 @@ public class TestCreateUser {
 
         Response firstResponse = apiSteps.registerUser(user);
         apiSteps.validateSuccessfulRegistration(firstResponse);
-        saveToken(firstResponse);
+        token = apiSteps.saveToken(firstResponse);
         try {
             Response secondResponse = apiSteps.registerUser(user);
             apiSteps.validateDuplicateRegistration(secondResponse);
@@ -60,6 +60,7 @@ public class TestCreateUser {
             User user = new User(email, password, name);
 
             Response response = apiSteps.registerUser(user);
+            token = apiSteps.saveToken(response);
             apiSteps.validateMissingParameterResponse(response);
         }
     }
@@ -69,10 +70,5 @@ public class TestCreateUser {
         if (token != null) {
             apiSteps.deleteUser(token);
         }
-    }
-
-    @Step("Сохранение токена")
-    private void saveToken(Response response) {
-        token = response.jsonPath().getString("accessToken");
     }
 }

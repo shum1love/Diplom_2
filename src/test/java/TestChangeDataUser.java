@@ -1,6 +1,5 @@
 import SupportClasses.User;
 import SupportClasses.UserEmailName;
-import com.github.javafaker.Faker;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
 import org.junit.After;
@@ -39,16 +38,17 @@ public class TestChangeDataUser {
     }
 
     @Test
-    @DisplayName("Изменение данных пользователя без авторизации")
+    @DisplayName("Изменение данных пользователя без авторизации") //отсутсвует метод. Проврить у всех методов удаление
     public void testChangeDataWithoutLogin() {
+        // Задаём тестовые данные фейкером
         String name = faker.name().fullName();
         String password = faker.internet().password(6, 10, true, true, true);
         String email = faker.internet().emailAddress();
         String nameNew = faker.name().fullName();
         String emailNew = faker.internet().emailAddress();
 
+        // Задаём данные для регистраии пользователя и для обновления данных
         User user = new User(email, password, name);
-        User userForLogin = new User(email, password);
         UserEmailName updateData = new UserEmailName(emailNew, nameNew);
 
         Response registerResponse = apiSteps.registerUser(user);

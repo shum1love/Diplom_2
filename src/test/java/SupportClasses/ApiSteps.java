@@ -3,9 +3,7 @@ package SupportClasses;
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import org.apache.hc.core5.http.HttpStatus;
-
 import java.util.List;
-
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.equalTo;
 
