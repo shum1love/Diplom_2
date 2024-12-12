@@ -1,31 +1,31 @@
 import SupportClasses.User;
 import SupportClasses.UserEmailName;
-import io.qameta.allure.Step;
+import com.github.javafaker.Faker;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import SupportClasses.ApiSteps;
-import static io.restassured.RestAssured.baseURI;
-import static io.restassured.RestAssured.given;
 import org.apache.hc.core5.http.HttpStatus;
+import com.github.javafaker.Faker;
 
 public class TestChangeDataUser {
     private String token;
     private ApiSteps apiSteps = new ApiSteps();
-
-    /*@Before
-    public void setUp() {
-        baseURI = "https://stellarburgers.nomoreparties.site";
-    }*/
+    Faker faker = new Faker();
 
     @Test
     @DisplayName("Изменение данных пользователя с авторизацией")
     public void testChangeDataUser() {
-        User user = new User("bogdanexample17.praktikum@gmail.com", "Bogdan777", "Bogdan");
-        User userForLogin = new User("bogdanexample17.praktikum@gmail.com", "Bogdan777");
-        UserEmailName updateData = new UserEmailName("boris.borabora17@exaple.com", "Boris");
+        String name = faker.name().fullName();
+        String password = faker.internet().password(6, 10, true, true, true);
+        String email = faker.internet().emailAddress();
+        String nameNew = faker.name().fullName();
+        String emailNew = faker.internet().emailAddress();
+
+        User user = new User(email, password, name);
+        User userForLogin = new User(email, password);
+        UserEmailName updateData = new UserEmailName(emailNew, nameNew);
 
         Response registerResponse = apiSteps.registerUser(user);
         registerResponse.then().statusCode(HttpStatus.SC_OK);
@@ -41,8 +41,15 @@ public class TestChangeDataUser {
     @Test
     @DisplayName("Изменение данных пользователя без авторизации")
     public void testChangeDataWithoutLogin() {
-        User user = new User("bogdanexamplerr13.praktikum@gmail.com", "Bogdan777", "Bogdan");
-        UserEmailName updateData = new UserEmailName("boriss13.borisovich@exaple.com", "Boris");
+        String name = faker.name().fullName();
+        String password = faker.internet().password(6, 10, true, true, true);
+        String email = faker.internet().emailAddress();
+        String nameNew = faker.name().fullName();
+        String emailNew = faker.internet().emailAddress();
+
+        User user = new User(email, password, name);
+        User userForLogin = new User(email, password);
+        UserEmailName updateData = new UserEmailName(emailNew, nameNew);
 
         Response registerResponse = apiSteps.registerUser(user);
         registerResponse.then().statusCode(HttpStatus.SC_OK);
@@ -51,61 +58,6 @@ public class TestChangeDataUser {
         Response updateResponse = apiSteps.updateUser("", updateData);
         updateResponse.then().statusCode(HttpStatus.SC_UNAUTHORIZED);
     }
-
-    /*@Step("Регистрация нового пользователя")
-    public Response registerUser(User user) {
-        return given()
-                .log().all()
-                .header("Content-Type", "application/json")
-                .body(user)
-                .when()
-                .post("/api/auth/register")
-                .then()
-                .log().all()
-                .extract().response();
-    }
-
-    @Step("Авторизация пользователя")
-    public Response loginUser(User user) {
-        return given()
-                .log().all()
-                .header("Content-Type", "application/json")
-                .body(user)
-                .when()
-                .post("/api/auth/login")
-                .then()
-                .log().all()
-                .extract().response();
-    }
-
-    @Step("Изменение данных пользователя")
-    public Response updateUser(String token, UserEmailName updateData) {
-        return given()
-                .log().all()
-                .header("Authorization", token)
-                .header("Content-Type", "application/json")
-                .body(updateData)
-                .when()
-                .patch("/api/auth/user")
-                .then()
-                .log().all()
-                .extract().response();
-    }
-
-    @Step("Удаление пользователя")
-    private void deleteUser(String token) {
-        Response response = given()
-                .log().all()
-                .header("Authorization", token)
-                .when()
-                .delete("/api/auth/user");
-
-        response.then().log().all();
-        response.then().statusCode(HttpStatus.SC_ACCEPTED);
-    }
-
-     */
-
     @After
     public void tearDown() {
         if (token != null) {

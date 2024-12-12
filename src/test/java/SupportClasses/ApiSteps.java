@@ -14,10 +14,7 @@ public class ApiSteps {
 
     @Step("Регистрация нового пользователя")
     public Response registerUser(User user) {
-        return given()
-                .log().all()
-                .baseUri(BASE_URL)
-                .header("Content-Type", "application/json")
+        return prepareRequest()
                 .body(user)
                 .when()
                 .post("/api/auth/register")
@@ -36,10 +33,7 @@ public class ApiSteps {
 
     @Step("Авторизация пользователя")
     public Response loginUser(User user) {
-        return given()
-                .log().all()
-                .baseUri(BASE_URL)
-                .header("Content-Type", "application/json")
+        return prepareRequest()
                 .body(user)
                 .when()
                 .post("/api/auth/login")
@@ -48,13 +42,17 @@ public class ApiSteps {
                 .extract().response();
     }
 
+    @Step("Генерация случайного пользователя")
+    public User generateRandomUser() {
+        String randomEmail = GenerateRandomString.generateRandomEmail();
+        String randomPassword = GenerateRandomString.generateRandomPassword();
+        return new User(randomEmail, randomPassword);
+    }
+
     @Step("Изменение данных пользователя")
     public Response updateUser(String token, UserEmailName updateData) {
-        return given()
-                .log().all()
-                .baseUri(BASE_URL)
+        return prepareRequest()
                 .header("Authorization", token)
-                .header("Content-Type", "application/json")
                 .body(updateData)
                 .when()
                 .patch("/api/auth/user")
@@ -65,10 +63,7 @@ public class ApiSteps {
 
     @Step("Получение списка ингредиентов")
     public List<String> getIngredients() {
-        Response response = given()
-                .log().all()
-                .baseUri(BASE_URL)
-                .header("Content-Type", "application/json")
+        Response response = prepareRequest()
                 .when()
                 .get("/api/ingredients");
         response.then()
@@ -80,11 +75,8 @@ public class ApiSteps {
 
     @Step("Создание заказа")
     public Response createOrder(String token, String ingredientsJson) {
-        return given()
-                .log().all()
-                .baseUri(BASE_URL)
+        return prepareRequest()
                 .header("Authorization", token)
-                .header("Content-Type", "application/json")
                 .body(ingredientsJson)
                 .when()
                 .post("/api/orders")
@@ -111,13 +103,9 @@ public class ApiSteps {
 
     @Step("Получение заказов пользователя без токена")
     public void getUserOrdersWithoutToken() {
-        Response response = given()
-                .log().all()
-                .baseUri(BASE_URL)
-                .header("Content-Type", "application/json")
+        Response response = prepareRequest()
                 .when()
                 .get("/api/orders");
-
         response.then()
                 .log().all()
                 .statusCode(HttpStatus.SC_UNAUTHORIZED);
@@ -125,14 +113,10 @@ public class ApiSteps {
 
     @Step("Получение заказов пользователя с токеном")
     public void getUserOrdersWithToken(String token) {
-        Response response = given()
-                .log().all()
-                .baseUri(BASE_URL)
-                .header("Content-Type", "application/json")
+        Response response = prepareRequest()
                 .header("Authorization", token)
                 .when()
                 .get("/api/orders");
-
         response.then()
                 .log().all()
                 .statusCode(HttpStatus.SC_OK);
@@ -145,15 +129,22 @@ public class ApiSteps {
 
     @Step("Удаление пользователя")
     public void deleteUser(String token) {
-        Response response = given()
-                .log().all()
-                .baseUri(BASE_URL)
+        Response response = prepareRequest()
                 .header("Authorization", token)
                 .when()
                 .delete("/api/auth/user");
-
         response.then()
                 .log().all()
-                .statusCode(HttpStatus.SC_ACCEPTED); // Код статуса для удаления пользователя
+                .statusCode(HttpStatus.SC_ACCEPTED);
+    }
+
+    /**
+     * Подготовка базового запроса с базовым URL и логами.
+     */
+    private io.restassured.specification.RequestSpecification prepareRequest() {
+        return given()
+                .log().all()
+                .baseUri(BASE_URL)
+                .header("Content-Type", "application/json");
     }
 }

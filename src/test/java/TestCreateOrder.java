@@ -44,8 +44,11 @@ public class TestCreateOrder {
     @Test
     @DisplayName("Создание заказа с авторизацией и с ингедиентами")
     public void testCreateOrderWithIngredients() {
-        User user = new User("bogdanexample2.praktikum@gmail.com", "Bogdan777", "Bogdan");
-        User userLogin = new User("bogdanexample2.praktikum@gmail.com", "Bogdan777");
+        String name = faker.name().fullName();
+        String password = faker.internet().password(6, 10, true, true, true);
+        String email = faker.internet().emailAddress();
+        User user = new User(email, password, name);
+        User userLogin = new User(email, password);
 
         apiSteps.registerUser(user).then().statusCode(HttpStatus.SC_OK);
         token = apiSteps.loginUser(userLogin).then().statusCode(HttpStatus.SC_OK)
@@ -60,8 +63,11 @@ public class TestCreateOrder {
     @Test
     @DisplayName("Создание заказа с авторизацией, но без ингредиентов")
     public void testCreateOrderWithoutIngredients() {
-        User user = new User("bogdanexample2.praktikum@gmail.com", "Bogdan777", "Bogdan");
-        User userLogin = new User("bogdanexample2.praktikum@gmail.com", "Bogdan777");
+        String name = faker.name().fullName();
+        String password = faker.internet().password(6, 10, true, true, true);
+        String email = faker.internet().emailAddress();
+        User user = new User(email, password, name);
+        User userLogin = new User(email, password);
 
         apiSteps.registerUser(user).then().statusCode(HttpStatus.SC_OK);
         token = apiSteps.loginUser(userLogin).then().statusCode(HttpStatus.SC_OK)
@@ -75,8 +81,11 @@ public class TestCreateOrder {
     @Test
     @DisplayName("Создание заказа с авторизацией, но с неправильным хешем ингедиентов")
     public void testCreateOrderWithWrongHash() {
-        User user = new User("bogdanexample2.praktikum@gmail.com", "Bogdan777", "Bogdan");
-        User userLogin = new User("bogdanexample2.praktikum@gmail.com", "Bogdan777");
+        String name = faker.name().fullName();
+        String password = faker.internet().password(6, 10, true, true, true);
+        String email = faker.internet().emailAddress();
+        User user = new User(email, password, name);
+        User userLogin = new User(email, password);
 
         apiSteps.registerUser(user).then().statusCode(HttpStatus.SC_OK);
         token = apiSteps.loginUser(userLogin).then().statusCode(HttpStatus.SC_OK)
