@@ -4,30 +4,26 @@ import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import java.util.Collection;
-import static io.restassured.RestAssured.baseURI;
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.equalTo;
-import org.apache.hc.core5.http.HttpStatus;
+import SupportClasses.ApiSteps;
+import com.github.javafaker.Faker;
 
 public class TestCreateUser {
     private String token;
-
-    @Before
-    public void setUp() {
-        baseURI = "https://stellarburgers.nomoreparties.site";
-    }
-
+    private ApiSteps apiSteps = new ApiSteps();
+    Faker faker = new Faker();
     @Test
     @DisplayName("Создание уникального пользователя")
     public void testRegisterUserSuccessfully() {
-        User user = new User("bogdan.praktikum@gmail.com", "Boris777", "Boris");
+        String name = faker.name().fullName();
+        String password = faker.internet().password(6, 10, true, true, true);
+        String email = faker.internet().emailAddress();
+        User user = new User(email, password, name);
 
-        Response response = registerUser(user);
+        Response response = apiSteps.registerUser(user);
 
-        validateSuccessfulRegistration(response);
+        apiSteps.validateSuccessfulRegistration(response);
 
         saveToken(response);
     }
@@ -35,13 +31,20 @@ public class TestCreateUser {
     @Test
     @DisplayName("Создание пользователя, который уже зарегистрирован")
     public void testRegisterUserRepeat() {
-        User user = new User("bogdann1.praktikum@gmail.com", "Boris777", "Boris");
+        String name = faker.name().fullName();
+        String password = faker.internet().password(6, 10, true, true, true);
+        String email = faker.internet().emailAddress();
+        User user = new User(email, password, name);
 
-        Response firstResponse = registerUser(user);
-        validateSuccessfulRegistration(firstResponse);
-        Response secondResponse = registerUser(user);
-        validateDuplicateRegistration(secondResponse);
+        Response firstResponse = apiSteps.registerUser(user);
+        apiSteps.validateSuccessfulRegistration(firstResponse);
         saveToken(firstResponse);
+        try {
+            Response secondResponse = apiSteps.registerUser(user);
+            apiSteps.validateDuplicateRegistration(secondResponse);
+        } finally {
+            // Логика удаления будет выполнена в @After
+        }
     }
 
     @Test
@@ -56,60 +59,20 @@ public class TestCreateUser {
 
             User user = new User(email, password, name);
 
-            Response response = registerUser(user);
-            validateMissingParameterResponse(response);
+            Response response = apiSteps.registerUser(user);
+            apiSteps.validateMissingParameterResponse(response);
         }
     }
 
     @After
     public void tearDown() {
         if (token != null) {
-            deleteUser(token);
+            apiSteps.deleteUser(token);
         }
-    }
-
-    @Step("Регистрация пользователя")
-    private Response registerUser(User user) {
-        return given()
-                .header("Content-Type", "application/json")
-                .body(user)
-                .when()
-                .post("/api/auth/register");
-    }
-
-    @Step("Проверка успешной регистрации")
-    private void validateSuccessfulRegistration(Response response) {
-        response.then()
-                .statusCode(HttpStatus.SC_OK)
-                .body("success", equalTo(true));
-    }
-
-    @Step("Проверка регистрации с повторными данными")
-    private void validateDuplicateRegistration(Response response) {
-        response.then()
-                .statusCode(HttpStatus.SC_FORBIDDEN)
-                .body("message", equalTo("SupportClasses.User already exists"));
-    }
-
-    @Step("Проверка ответа при отсутствии параметров")
-    private void validateMissingParameterResponse(Response response) {
-        response.then()
-                .statusCode(HttpStatus.SC_FORBIDDEN)
-                .body("message", equalTo("Email, password and name are required fields"));
     }
 
     @Step("Сохранение токена")
     private void saveToken(Response response) {
         token = response.jsonPath().getString("accessToken");
-    }
-
-    @Step("Удаление пользователя")
-    public void deleteUser(String token) {
-        given()
-                .header("Authorization", token)
-                .when()
-                .delete("/api/auth/user")
-                .then()
-                .statusCode(HttpStatus.SC_ACCEPTED);
     }
 }
