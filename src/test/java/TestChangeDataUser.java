@@ -38,7 +38,7 @@ public class TestChangeDataUser {
     }
 
     @Test
-    @DisplayName("Изменение данных пользователя без авторизации") //отсутсвует метод. Проврить у всех методов удаление
+    @DisplayName("Изменение данных пользователя без авторизации")
     public void testChangeDataWithoutLogin() {
         // Задаём тестовые данные фейкером
         String name = faker.name().fullName();
